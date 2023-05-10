@@ -12,6 +12,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
+import com.example.jkds.cmm.dto.JwtTokenDto;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -24,10 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TokenProvider{
-	protected static final String AUTHORITIES_KEY = "auth";
+	protected static final String AUTHORITIES_KEY = "Authorization";
 	
 	protected final String accessTokenSecret;
 	protected final long accessTokenValidityInSeconds;
+	
+	private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 3;  // 3시간
 	
 	protected Key key;
 	
@@ -39,18 +43,44 @@ public class TokenProvider{
 		this.key = Keys.hmacShaKeyFor(keyBytes); 
 		log.info(" Token Key : " +key.toString());
 	}
-	
-	public String createToken(Authentication authentication) {
+	public JwtTokenDto refreshToken(String refreshTokn) {
+			Authentication authentication = getAuthentication(refreshTokn);
+			String authorities = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
+			long now = (new Date()).getTime();
+			Date validity = new Date(now + this.accessTokenValidityInSeconds);
+			Date refreshValidity = new Date(now + REFRESH_TOKEN_EXPIRE_TIME);
+			String accessToken = Jwts.builder()
+					.setSubject(authentication.getName())
+					.claim(AUTHORITIES_KEY, authorities)
+					.signWith(key, SignatureAlgorithm.HS512)
+					.setExpiration(validity)
+					.compact();
+			String refreshToken = Jwts.builder()
+					.setSubject(authentication.getName())
+					.claim(AUTHORITIES_KEY, authorities)
+					.signWith(key, SignatureAlgorithm.HS512)
+					.setExpiration(refreshValidity)
+					.compact();
+			return new JwtTokenDto(accessToken, refreshToken, refreshValidity);
+	}
+	public JwtTokenDto createToken(Authentication authentication) {
 		String authorities = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
 		long now = (new Date()).getTime();
 		Date validity = new Date(now + this.accessTokenValidityInSeconds);
-		
-		return Jwts.builder()
+		Date refreshValidity = new Date(now + REFRESH_TOKEN_EXPIRE_TIME);
+		String accessToken = Jwts.builder()
 				.setSubject(authentication.getName())
 				.claim(AUTHORITIES_KEY, authorities)
 				.signWith(key, SignatureAlgorithm.HS512)
 				.setExpiration(validity)
 				.compact();
+		String refreshToken = Jwts.builder()
+				.setSubject(authentication.getName())
+				.claim(AUTHORITIES_KEY, authorities)
+				.signWith(key, SignatureAlgorithm.HS512)
+				.setExpiration(refreshValidity)
+				.compact();
+		return new JwtTokenDto(accessToken, refreshToken, refreshValidity);
 	}
 	
 	public Authentication getAuthentication(String token) {

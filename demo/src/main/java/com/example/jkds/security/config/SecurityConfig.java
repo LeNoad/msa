@@ -61,7 +61,8 @@ public class SecurityConfig {
 	        /** HttpServletRequest를 사용하는 요청들에 대한 접근 제한 설정*/
 	        .and()
 	        .authorizeHttpRequests()
-	        .requestMatchers("/**").permitAll()
+	        .requestMatchers("/authorize").permitAll()
+	        .requestMatchers("/authorizeTokenRefresh").authenticated()
 	
 	        /**JwtSecurityConfig 적용 */
 	        .and()

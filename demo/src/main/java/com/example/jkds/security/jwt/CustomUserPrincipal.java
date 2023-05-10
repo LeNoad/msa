@@ -34,14 +34,14 @@ public class CustomUserPrincipal implements UserDetails{
         return new CustomUserPrincipal(user.getUserIdx(), user.getUserId(), user.getUserPassword(), authorities);
     }
 	@Override
-	public String getPassword() {
-		// TODO Auto-generated method stub
-		return userPassword;
-	}
-	@Override
 	public String getUsername() {
 		// TODO Auto-generated method stub
 		return userId;
+	}
+	@Override
+	public String getPassword() {
+		// TODO Auto-generated method stub
+		return userPassword;
 	}
 	@Override
 	public boolean isAccountNonExpired() {
