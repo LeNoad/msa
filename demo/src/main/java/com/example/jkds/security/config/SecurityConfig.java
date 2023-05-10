@@ -61,8 +61,14 @@ public class SecurityConfig {
 	        /** HttpServletRequest를 사용하는 요청들에 대한 접근 제한 설정*/
 	        .and()
 	        .authorizeHttpRequests()
-	        .requestMatchers("/authorize").permitAll()
-	        .requestMatchers("/authorizeTokenRefresh").authenticated()
+	        
+	        .requestMatchers("/api/**").permitAll()
+	        /* 사용자 회원가입 */
+	        .requestMatchers("/api/register").permitAll()
+	        /* 사용자 로그인 */
+	        .requestMatchers("/api/authorize").permitAll()
+	        /* 사용자 토큰 갱신 */
+	        .requestMatchers("/api/authorizeTokenRefresh").authenticated()
 	
 	        /**JwtSecurityConfig 적용 */
 	        .and()

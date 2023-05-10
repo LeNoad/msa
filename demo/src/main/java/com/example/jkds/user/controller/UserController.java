@@ -4,14 +4,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.jkds.cmm.dto.JwtTokenDto;
 import com.example.jkds.cmm.dto.ResultDto;
-import com.example.jkds.security.jwt.JwtFilter;
 import com.example.jkds.security.jwt.TokenProvider;
 import com.example.jkds.user.dto.LoginDto;
+import com.example.jkds.user.entity.User;
 import com.example.jkds.user.service.UserService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +29,7 @@ public class UserController {
 	@Value("${jwt.auth.header}")
 	private String AUTHORIZATION_HEADER;
 	
-	@RequestMapping("/authorize")
+	@RequestMapping("/api/authorize")
 	public ResultDto<?> authorization(@RequestBody LoginDto loginDto) {
 		JwtTokenDto jwtTokenDto = userService.authentication(loginDto.getUserId(), loginDto.getUserPassword());
         if(jwtTokenDto != null) {
@@ -39,7 +38,7 @@ public class UserController {
         	return new ResultDto().makeResult(HttpStatus.FORBIDDEN, "로그인 실패");
         }
 	}
-	@RequestMapping(value = "/authorizeTokenRefresh" )
+	@RequestMapping(value = "/api/authorizeTokenRefresh" )
 	public ResultDto<?> authorizeTokenRefresh(HttpServletRequest request) {
 		String refreshToken = request.getHeader(AUTHORIZATION_HEADER);
 		JwtTokenDto jwtTokenDto = tokenProvider.refreshToken(refreshToken.substring(7));
@@ -48,5 +47,11 @@ public class UserController {
         } else {
         	return new ResultDto().makeResult(HttpStatus.FORBIDDEN, "로그인 실패");
         }
+	}
+	
+	@RequestMapping(value = "/api/register")
+	public ResultDto<?> register(@RequestBody User user) {
+		userService.register(user);
+		return new ResultDto().makeResult(HttpStatus.OK, "테스트 성공");
 	}
 }
