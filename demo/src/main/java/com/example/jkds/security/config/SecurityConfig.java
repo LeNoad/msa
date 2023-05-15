@@ -1,7 +1,5 @@
 package com.example.jkds.security.config;
 
-import java.util.Arrays;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,10 +9,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import com.example.jkds.security.jwt.JwtAccessDeniedHandler;
 import com.example.jkds.security.jwt.JwtAuthenticationEntryPoint;
@@ -25,15 +19,13 @@ import com.example.jkds.security.jwt.TokenProvider;
 @Configuration
 public class SecurityConfig {
 	private final TokenProvider tokenProvider;
-    private final CorsFilter corsFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
    
-	public SecurityConfig(TokenProvider tokenProvider, CorsFilter corsFilter,
+	public SecurityConfig(TokenProvider tokenProvider,
 			JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, JwtAccessDeniedHandler jwtAccessDeniedHandler) {
 		super();
 		this.tokenProvider = tokenProvider;
-		this.corsFilter = corsFilter;
 		this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
 		this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
 	}
@@ -51,37 +43,28 @@ public class SecurityConfig {
     @Bean
 	SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
     	httpSecurity
-	    	.csrf().disable()
-	    	
+    			.cors()
+    		.and()
+	    		.csrf()
+	    		.disable()
 	        /**401, 403 Exception 핸들링 */
 	        .exceptionHandling()
 	        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
 	        .accessDeniedHandler(jwtAccessDeniedHandler)
-	
 	        /**세션 사용하지 않음*/
 	        .and()
-	        .sessionManagement()
-	        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-	
-	        /** HttpServletRequest를 사용하는 요청들에 대한 접근 제한 설정*/
+		        .sessionManagement()
+		        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+	        	/** HttpServletRequest를 사용하는 요청들에 대한 접근 제한 설정*/
 	        .and()
-	        .authorizeHttpRequests()
-	        
-	        .requestMatchers("/api/**").permitAll()
-	        /* 사용자 회원가입 */
-	        .requestMatchers("/api/register").permitAll()
-	        /* 사용자 로그인 */
-	        .requestMatchers("/api/authorize").permitAll()
-	        /* 사용자 토큰 갱신 */
-	        .requestMatchers("/api/authorizeTokenRefresh").authenticated()
-	
-	        /**JwtSecurityConfig 적용 */
-	        .and()
-	        .formLogin()
-	        .disable()
-	        .apply(new JwtSecurityConfig(tokenProvider));
+		        .authorizeHttpRequests()
+		        .requestMatchers("/api/authorize").permitAll()
+		        .requestMatchers("/api/register").permitAll()
+		        .anyRequest().authenticated()
+		    .and()
+	        	/**JwtSecurityConfig 적용 */
+	        	.apply(new JwtSecurityConfig(tokenProvider));
     	
     	return httpSecurity.build();
     }
-    
 }

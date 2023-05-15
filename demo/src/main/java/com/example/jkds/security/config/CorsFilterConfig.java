@@ -15,6 +15,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 public class CorsFilterConfig implements Filter{
@@ -25,9 +26,9 @@ public class CorsFilterConfig implements Filter{
 		CorsConfiguration config = new CorsConfiguration();
 		config.setAllowCredentials(true);
 		config.addAllowedHeader("*");
-		config.addAllowedHeader("*");
 		config.addAllowedMethod("*");
-		
+		config.setMaxAge(3600L);
+		config.addAllowedOrigin("http://localhost:3000");
 		source.registerCorsConfiguration("/**", config);
 		return new CorsFilter(source);
 	}
@@ -36,12 +37,11 @@ public class CorsFilterConfig implements Filter{
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
 		HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
-
         response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
         response.setHeader("Access-Control-Allow-Credentials", "true");
-        response.setHeader("Access-Control-Allow-Methods","*");
+        response.setHeader("Access-Control-Allow-Methods", "*");
         response.setHeader("Access-Control-Max-Age", "3600");
-        response.setHeader("Access-Control-Allow-Headers","Origin, X-Requested-With, Content-Type, Accept, Authorization");
+        response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
         if("OPTIONS".equalsIgnoreCase(request.getMethod())) {
         	response.setStatus(HttpServletResponse.SC_OK);
 	    }else {
