@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,6 +14,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
 import com.example.jkds.cmm.dto.JwtTokenDto;
+import com.example.jkds.user.repository.UserRepository;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -34,6 +36,9 @@ public class TokenProvider{
 	private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 3;  // 3시간
 	
 	protected Key key;
+	
+	@Autowired
+	private UserRepository userRepository;
 	
 	public TokenProvider(String accessTokenSecret, long accessTokenValidityInSeconds) {
 		this.accessTokenSecret = accessTokenSecret;
@@ -61,7 +66,9 @@ public class TokenProvider{
 					.signWith(key, SignatureAlgorithm.HS512)
 					.setExpiration(refreshValidity)
 					.compact();
-			return new JwtTokenDto(accessToken, refreshToken, refreshValidity);
+			com.example.jkds.user.entity.User user = userRepository.findByUserId(authentication.getName()).get();
+			user.setUserPassword(null);
+			return new JwtTokenDto(accessToken, refreshToken, refreshValidity, user);
 	}
 	public JwtTokenDto createToken(Authentication authentication) {
 		String authorities = authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
@@ -80,9 +87,10 @@ public class TokenProvider{
 				.signWith(key, SignatureAlgorithm.HS512)
 				.setExpiration(refreshValidity)
 				.compact();
-		return new JwtTokenDto(accessToken, refreshToken, refreshValidity);
+		com.example.jkds.user.entity.User user = userRepository.findByUserId(authentication.getName()).get();
+		user.setUserPassword(null);
+		return new JwtTokenDto(accessToken, refreshToken, refreshValidity, user);
 	}
-	
 	public Authentication getAuthentication(String token) {
 		Claims claims = Jwts
 				.parserBuilder()

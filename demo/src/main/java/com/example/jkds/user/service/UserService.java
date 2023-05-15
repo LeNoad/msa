@@ -1,5 +1,7 @@
 package com.example.jkds.user.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -48,5 +50,10 @@ public class UserService {
 		user.setUserPassword(passwordEncoder.encode(user.getUserPassword()));
 		user.setUserRole("USER");
 		userRepository.save(user);
+	}
+	
+	public List<User> selectAllUser() {
+		List<User> list = userRepository.findAll();
+		return list;
 	}
 }

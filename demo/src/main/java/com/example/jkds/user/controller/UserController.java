@@ -54,4 +54,8 @@ public class UserController {
 		userService.register(user);
 		return new ResultDto().makeResult(HttpStatus.OK, "테스트 성공");
 	}
+	@RequestMapping(value = "/api/selectAllUser")
+	public ResultDto<?> selectAllUser() {
+		return new ResultDto<>().makeResult(HttpStatus.OK, "테스트 성공", userService.selectAllUser(), "userList");
+	}
 }
